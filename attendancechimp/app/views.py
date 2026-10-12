@@ -45,8 +45,7 @@ def sum_view(request):
     except (KeyError, ValueError):
         return HttpResponseBadRequest("Provide numbers for n1 and n2.")
 
-    return JsonResponse({"sum": n1 + n2})
-
+    return HttpResponse(f"<p>{n1 + n2:g}</p>")
 
 # ---------------------------------------------------------------------------
 # HW4  — user creation
