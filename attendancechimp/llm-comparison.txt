@@ -1,0 +1,14 @@
+For homework 3, I wanted to make sure that my model was including precise attendance 
+records. I chose the requirements for my main model and then also created a separate, 
+simpler model to compare. Both models include the six tables required for the homework
+and prevent duplicate enrollments. My main model also separates meeting days and times,
+checks that lecture end times are after the start times, and prevent multiple uploads
+for the same student and the lecture. The model allows for an upload's lecture to be 
+unknown until the image is process. 
+The simpler model uses a text schedule, only records the lecture date, requires the
+lecture immediately, and allows repeated uploads. It is easier to implement, but it also
+has fewer safeguards for making sure that attendence was accurately taken. My model also
+uses PROTECT for related records, while the simple model uses CASCADE, which might delete
+related history. I like my main design more than the simple one since it allows to check
+attendance and preserve records, although later application code must still validate the
+QR images, enrollment, and submission times.
