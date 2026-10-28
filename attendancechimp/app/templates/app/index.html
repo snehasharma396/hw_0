@@ -4,17 +4,35 @@
     <meta charset="UTF-8">
     <title>AttendanceChimp</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 40px; }
-        .bio { max-width: 600px; margin: 0 auto; }
-        .username { font-weight: bold; font-size: 1.2em; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 40px;
+        }
+
+        main {
+            max-width: 650px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
-<div class="bio">
-    <h1>AttendanceChimp</h1>
-    <p>Electronic class attendance tracking application.</p>
-    <hr>
+    <main>
+        <h1>AttendanceChimp</h1>
 
-</div>
+        <p>
+            I’m Sneha, a data science student at the University of Chicago.
+	    I would like to use AttendanceChimp to help record class
+	    attendance accurately.
+        </p>
+
+        {% if current_user.is_authenticated %}
+            <p>Logged in as <strong>{{ current_user.username }}</strong></p>
+        {% else %}
+            <p>Not logged in.</p>
+        {% endif %}
+
+        <p>Current Central time: {{ current_time }}</p>
+    </main>
 </body>
 </html>

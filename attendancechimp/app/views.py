@@ -11,6 +11,8 @@ from django.http import (HttpResponse, HttpResponseForbidden,
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
+from django.db import IntegrityError, transaction
+from .models import StudentProfile, InstructorProfile
 from datetime import datetime
 import zoneinfo
 import json
@@ -28,10 +30,13 @@ CDT = zoneinfo.ZoneInfo("America/Chicago")
 # ---------------------------------------------------------------------------
 
 def index(request):
-    """Render the home page (index.html)."""
+    """Display the home page with Central time and user information."""
 
-    context = {}
-    return render(request, 'app/index.html', context)
+    context = {
+        "current_time": datetime.now(CDT).strftime("%H:%M"),
+        "current_user": request.user,
+    }
+    return render(request, "app/index.html", context)
 
 def time_view(request):
     current_time = datetime.now(CDT).strftime("%H:%M")
@@ -50,8 +55,64 @@ def sum_view(request):
 # ---------------------------------------------------------------------------
 # HW4  — user creation
 # ---------------------------------------------------------------------------
+def new(request):
+    """Display the sign-up form for GET requests only."""
 
+    if request.method != "GET":
+        return HttpResponse(
+            "Method not allowed.",
+            status=405,
+            headers={"Allow": "GET"},
+        )
 
+    return render(request, "app/new.html")
+
+@csrf_exempt
+def createUser(request):
+    """Create an account and profile, then sign the user in."""
+
+    if request.method != "POST":
+        return HttpResponse(
+            "Method not allowed.",
+            status=405,
+            headers={"Allow": "POST"},
+        )
+
+    username = request.POST.get("user_name", "").strip()
+    email = request.POST.get("email", "").strip()
+    password = request.POST.get("password", "")
+    is_student = request.POST.get("is_student", "")
+
+    if not username or not email or not password:
+        return HttpResponseBadRequest("All fields are required.")
+
+    if is_student not in ("0", "1"):
+        return HttpResponseBadRequest("Choose student or instructor.")
+
+    if User.objects.filter(email__iexact=email).exists():
+        return HttpResponseBadRequest("This email is already registered.")
+
+    if User.objects.filter(username=username).exists():
+        return HttpResponseBadRequest("This username is already taken.")
+
+    try:
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+            )
+
+            if is_student == "1":
+                StudentProfile.objects.create(user=user)
+            else:
+                InstructorProfile.objects.create(user=user)
+
+    except IntegrityError:
+        return HttpResponseBadRequest("Unable to create this account.")
+
+    login(request, user)
+    return HttpResponse("Account created successfully.", status=200)
 
 # ---------------------------------------------------------------------------
 # HW5  — courses, lectures, QR uploads, dump
