@@ -9,7 +9,13 @@
 
     <form method="post" action="/app/createCourse">
         {% csrf_token %}
-
+        <p>
+            <label>
+                Course number:
+                <input name="course-number" type="text"
+                       maxlength="50" placeholder="DATA13600" required>
+            </label>
+        </p>
         <p>
             <label>
                 Course name:

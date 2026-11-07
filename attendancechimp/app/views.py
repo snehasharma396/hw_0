@@ -14,6 +14,8 @@ from django.contrib.auth import authenticate, login
 from django.db import IntegrityError, transaction
 from .models import StudentProfile, InstructorProfile, Course
 from datetime import datetime
+from .models import getUploadsForCourse
+
 import zoneinfo
 import json
 import io
@@ -159,6 +161,12 @@ def createCourse(request):
         )
 
     name = request.POST.get("course-name", "").strip()
+    course_number = request.POST.get("course-number", "").strip()
+
+    if not course_number or len(course_number) > 50:
+        return HttpResponseBadRequest(
+            "Provide a course number of at most 50 characters."
+        )
     start_text = request.POST.get("start-time", "")
     end_text = request.POST.get("end-time", "")
 
@@ -191,9 +199,16 @@ def createCourse(request):
                 meeting_days=",".join(days),
                 start_time=start,
                 end_time=end,
+                mon="mon" in days,
+                tue="tue" in days,
+                wed="wed" in days,
+                thu="thu" in days,
+                fri="fri" in days,
             )
     except IntegrityError:
-        return HttpResponseBadRequest("That course name already exists.")
+        return HttpResponseBadRequest(
+            "That course name or course number already exists."
+        )
 
     return HttpResponse("Course created successfully.", status=200)
 def new_lecture(request):
@@ -338,5 +353,41 @@ def dumpUploads(request):
 # HW6  — getUploads
 # ---------------------------------------------------------------------------
 
+def getUploads(request):
+    """Return time-valid uploads for a course to instructors."""
 
+    if not request.user.is_authenticated:
+        return HttpResponse("Instructor access required.", status=401)
+
+    if not InstructorProfile.objects.filter(user=request.user).exists():
+        return HttpResponse("Instructor access required.", status=401)
+
+    if request.method != "GET":
+        return HttpResponse(
+            "Method not allowed.",
+            status=405,
+            headers={"Allow": "GET"},
+        )
+
+    course_number = request.GET.get("course", "").strip()
+
+    if not course_number:
+        return JsonResponse(
+            {"error": "Missing course parameter"},
+            status=400,
+        )
+
+    uploads = getUploadsForCourse(course_number)
+
+    data = [
+        {
+            "username": upload.student.user.username,
+            "upload_time": upload.uploaded_at.astimezone(CDT).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+        }
+        for upload in uploads
+    ]
+
+    return JsonResponse(data, safe=False)
 

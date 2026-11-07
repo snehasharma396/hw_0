@@ -18,6 +18,8 @@ Entities
 
 from django.db import models
 from django.contrib.auth.models import User
+from zoneinfo import ZoneInfo
+from django.utils import timezone
 
 import logging
 import string
@@ -79,6 +81,17 @@ class Course(models.Model):
     """
 
     name = models.CharField(max_length=200, unique=True)
+    course = models.CharField(
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    mon = models.BooleanField(default=False)
+    tue = models.BooleanField(default=False)
+    wed = models.BooleanField(default=False)
+    thu = models.BooleanField(default=False)
+    fri = models.BooleanField(default=False)
     instructor = models.ForeignKey(
         InstructorProfile,
         on_delete=models.PROTECT,
@@ -87,6 +100,16 @@ class Course(models.Model):
     meeting_days = models.CharField(max_length=100)
     start_time = models.TimeField()
     end_time = models.TimeField()
+
+    def meets_on_day(self, weekday):
+        """Return whether this course meets on a Python weekday number."""
+
+        days = (self.mon, self.tue, self.wed, self.thu, self.fri)
+
+        if 0 <= weekday < len(days):
+            return days[weekday]
+
+        return False
 
     def __str__(self):
         return self.name
@@ -204,6 +227,35 @@ class QRCodeUpload(models.Model):
 # ---------------------------------------------------------------------------
 # Helper / API functions
 # ---------------------------------------------------------------------------
+def getUploadsForCourse(course):
+    """Return uploads made during the course's Chicago meeting hours."""
 
+    selected_course = Course.objects.filter(course=course).first()
+
+    if selected_course is None:
+        return []
+
+    chicago = ZoneInfo("America/Chicago")
+    valid_uploads = []
+
+    uploads = QRCodeUpload.objects.filter(
+        lecture__course=selected_course
+    ).select_related("student__user").order_by("uploaded_at", "id")
+
+    for upload in uploads:
+        local_timestamp = timezone.localtime(
+            upload.uploaded_at,
+            chicago,
+        )
+
+        if not selected_course.meets_on_day(local_timestamp.weekday()):
+            continue
+
+        upload_time = local_timestamp.time()
+
+        if selected_course.start_time <= upload_time <= selected_course.end_time:
+            valid_uploads.append(upload)
+
+    return valid_uploads
 
 
