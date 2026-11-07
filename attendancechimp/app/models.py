@@ -78,7 +78,7 @@ class Course(models.Model):
     Protect the instructor profile while a course references it.
     """
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     instructor = models.ForeignKey(
         InstructorProfile,
         on_delete=models.PROTECT,

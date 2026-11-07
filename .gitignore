@@ -5,3 +5,8 @@ attendancechimp/db.sqlite3
 __pycache__/
 *.pyc
 *.save
+
+# Local migrations and uploaded files
+attendancechimp/app/migrations/*
+!attendancechimp/app/migrations/__init__.py
+attendancechimp/media/

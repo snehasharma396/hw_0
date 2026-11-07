@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Attendance Image</title>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center;">
+    <h1>Upload Attendance Image</h1>
+
+    <form method="post"
+          action="/app/createQRCodeUpload"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <p>
+            <label for="image">Choose an image:</label>
+            <input id="image" name="imageUpload"
+                   type="file" accept="image/*" required>
+        </p>
+
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>
