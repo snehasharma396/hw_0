@@ -192,7 +192,7 @@ class QRCodeUpload(models.Model):
     """A student's uploaded attendance image.
 
     The lecture may be unknown until the image is processed.
-    Once identified, only one upload per student per lecture is allowed.
+    Multiple upload attempts may be recorded for a student and lecture.
     Protect the referenced student and lecture from deletion.
     """
 
@@ -211,13 +211,6 @@ class QRCodeUpload(models.Model):
     image = models.FileField(upload_to="qr_uploads/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["student", "lecture"],
-                name="unique_student_lecture_upload",
-            ),
-        ]
 
     def __str__(self):
         return f"Upload {self.pk} by {self.student}"
