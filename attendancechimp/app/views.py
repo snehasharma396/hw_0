@@ -161,7 +161,7 @@ def createCourse(request):
         )
 
     name = request.POST.get("course-name", "").strip()
-    course_number = request.POST.get("course-number", "").strip()
+    course_number = request.POST.get("course-number", "").strip() or name
 
     if not course_number or len(course_number) > 50:
         return HttpResponseBadRequest(
@@ -195,6 +195,7 @@ def createCourse(request):
         with transaction.atomic():
             Course.objects.create(
                 name=name,
+                course=course_number,
                 instructor=instructor,
                 meeting_days=",".join(days),
                 start_time=start,
